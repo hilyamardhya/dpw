@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('password');
             $table->integer('age')->nullable();
             $table->string('profile_photo')->nullable();
+            $table->string('role')->default('user')->after('profile_photo'); // Tambahkan kolom role
             $table->rememberToken();
             $table->timestamps();
         });
