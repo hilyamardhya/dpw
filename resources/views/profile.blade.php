@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Page</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* CSS Anda tetap utuh */
         body {
             background-color: #2c2c2c;
             color: white;
@@ -41,7 +41,6 @@
         }
 
         .header {
-            background: url('/images/banner.jpg') no-repeat center center;
             height: 200px;
             background-size: cover;
         }
@@ -64,7 +63,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
+        .profile-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
 
         .update-button {
             background-color: red;
@@ -107,46 +114,47 @@
 </head>
 <body>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-    
-    <!-- Tombol Back -->
     <a href="{{ url('/home') }}" class="back-button">
         <i class="fas fa-arrow-left"></i>
     </a>
 
-    <!-- Header -->
     <div class="header"></div>
+    <div class="profile-section">
+        <div class="profile-icon" id="profileIcon">
+            <img src="{{ $profile['profile_photo'] ?? '' }}" 
+                 alt="Profile Photo" 
+                 onerror="showDefaultIcon()">
+        </div>
+        <div style="margin-left: 20px;">
+            <h3>{{ $profile['name'] ?? 'User' }}</h3>
+            <p>Umur: {{ $profile['age'] ?? 'N/A' }} Tahun</p>
+            <a href="{{ route('profile.edit') }}" class="update-button">Perbarui Profil</a>
+        </div>
+    </div>
+    <div class="stats">
+        <strong>{{ $profile['favorites'] ? count($profile['favorites']) : 0 }}</strong> Favorit
+        <div class="items">
+            @if(!empty($profile['favorites']))
+                @foreach ($profile['favorites'] as $movie)
+                    <div class="item">
+                        <img src="{{ asset('storage/' . $movie->cover) }}" alt="{{ $movie->name }}">
 
-    <!-- Profile Section -->
-<div class="profile-section">
-    <div class="profile-icon">
-        <span style="font-size: 30px;">😎</span>
+                        <p>{{ $movie->name }}</p>
+                        <p>{{ $movie->release_year }}</p>
+                    </div>
+                @endforeach
+            @else
+                <p>Tidak ada favorit yang ditambahkan.</p>
+            @endif
+        </div>
+        
     </div>
-    <div style="margin-left: 20px;">
-        <h3>{{ $profile['username'] }}</h3>
-        <button class="update-button">Perbarui Profil</button>
-    </div>
-</div>
 
-<!-- Stats -->
-<div class="stats">
-    <p>
-        <strong>{{ $profile['wishlist'] ?? 0 }}</strong> Wishlist &nbsp;&nbsp;
-        <strong>{{ $profile['favorites'] ?? 0 }}</strong> Favorit
-    </p>
-    
-    <!-- Items -->
-    <div class="items">
-        @if($profile['items'] && $profile['items']->isNotEmpty())
-            @foreach ($profile['items'] as $item)
-                <div class="item">
-                    <img src="{{ asset('gambar/' . $item['image']) }}" alt="{{ $item['title'] ?? 'Untitled' }}">
-                    <p>{{ $item['title'] ?? 'Untitled' }}</p>
-                </div>
-            @endforeach
-        @else
-            <p>Tidak ada item untuk ditampilkan.</p>
-        @endif
-    </div>
-</div>   
+    <script>    
+        function showDefaultIcon() {
+            const profileIcon = document.getElementById('profileIcon');
+            profileIcon.innerHTML = '<i class="bi bi-person-circle text-light" style="font-size: 50px;"></i>';
+        }
+    </script>
 </body>
 </html>

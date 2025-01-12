@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             background-color: #3a3a3a;
@@ -60,53 +62,11 @@
         .register-link a:hover {
             text-decoration: underline;
         }
-
-        .alert {
-            margin-bottom: 15px;
-        }
     </style>
 </head>
 <body>
-    @if ($errors->any())
-    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="errorModalLabel">Peringatan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <ul>
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script>
-        // Menampilkan modal ketika ada error
-        var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-        errorModal.show();
-    </script>
-@endif
-
     <div class="login-container">
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <form action="{{ route('login.post') }}" method="POST">
+        <form id="loginForm">
             @csrf
             <div class="mb-3">
                 <input type="email" name="email" class="form-control" placeholder="Email" value="{{ old('email') }}" required>
@@ -121,6 +81,48 @@
             </div>
         </form>
     </div>
+
+    <script>
+        $(document).ready(function() {
+    $('#loginForm').on('submit', function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: "{{ route('login.post') }}",
+            method: "POST",
+            data: $(this).serialize(),
+            success: function(response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Login Berhasil',
+                    text: 'Anda akan diarahkan ke halaman yang sesuai.',
+                    showConfirmButton: false,
+                    timer: 2000
+                }).then(() => {
+                    window.location.href = response.redirect; // Redirect ke URL yang sesuai
+                });
+            },
+            error: function(xhr) {
+                let errors = xhr.responseJSON.errors;
+                let errorMessage = '';
+
+                if (errors && errors.email) {
+                    errorMessage += errors.email[0] + '<br>';
+                } else {
+                    errorMessage = 'Email atau password salah.';
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Login Gagal',
+                    html: errorMessage
+                });
+            }
+        });
+    });
+});
+
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

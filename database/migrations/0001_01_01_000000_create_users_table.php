@@ -17,7 +17,24 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->integer('age')->nullable();
+            $table->string('profile_photo')->nullable();
             $table->rememberToken();
+            $table->timestamps();
+        });
+        Schema::create('movies', function (Blueprint $table) {
+            $table->id(); // ID auto-increment
+            $table->string('name');
+            $table->string('cover');
+            $table->year('release_year');
+            $table->string('director');
+            $table->string('studio');
+            $table->timestamps();
+        });
+        Schema::create('user_favorites', function (Blueprint $table) {
+            $table->id(); // ID auto-increment
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('movie_id')->constrained('movies')->onDelete('cascade');
             $table->timestamps();
         });
 
@@ -42,9 +59,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('user_favorites');
+        Schema::dropIfExists('movies');
+        Schema::dropIfExists('users');
     }
     
 };

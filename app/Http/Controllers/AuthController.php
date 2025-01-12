@@ -16,58 +16,89 @@ class AuthController extends Controller
          return view('login');  // Pastikan view 'auth.login' ada di resources/views/auth/login.blade.php
      }
 
-    // Proses login
-    public function login(Request $request)
-{
-    $credentials = $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
+ 
+     public function login(Request $request)
+     {
+         // Validasi input
+         $credentials = $request->validate([
+             'email' => 'required|email',
+             'password' => 'required',
+         ]);
+     
+         if (Auth::attempt($credentials)) {
+             $request->session()->regenerate();
+     
+             // Periksa role pengguna
+             $user = Auth::user();
+     
+             // Arahkan berdasarkan role
+             if ($user->role === 'admin') {
+                 return response()->json([
+                     'message' => 'Login berhasil.',
+                     'redirect' => route('admin.dashboard'), // Route untuk admin
+                 ], 200);
+             } elseif ($user->role === 'user') {
+                 return response()->json([
+                     'message' => 'Login berhasil.',
+                     'redirect' => route('home'), // Route untuk user
+                 ], 200);
+             }
+         }
+     
+         // Jika autentikasi gagal
+         return response()->json([
+             'message' => 'Email atau password tidak sesuai.',
+             'errors' => [
+                 'email' => ['Email atau password salah.']
+             ]
+         ], 422);
+     }
+     
 
-    if (Auth::attempt($credentials)) {
-        return redirect()->route('home');  // Redirect ke halaman home setelah login sukses
-    } else {
-        return back()->withErrors([
-            'email' => 'Email atau password tidak sesuai.',
-        ]);
-    }
-}
 
 
     // Menampilkan halaman register
     public function showRegisterForm()
-    {
-        if (Auth::check()) {
-            return redirect()->route('home'); // Jika sudah login, redirect ke home
-        }
-        return view('login');
-    }
-
-    // Proses registrasi
-public function register(Request $request)
 {
-    // Validasi input
-    $validated = $request->validate([
-        'name' => 'required|max:255',
-        'email' => 'required|email|unique:users,email', // Pastikan email unik
-        'password' => 'required|min:6|confirmed', // Pastikan password terkonfirmasi
-    ]);
-
-    // Membuat user baru setelah validasi sukses
-    $user = new User();
-    $user->name = $validated['name'];
-    $user->email = $validated['email'];
-    $user->password = Hash::make($validated['password']); // Jangan lupa untuk mengenkripsi password
-    $user->save(); // Menyimpan data user ke database
-
-    // Login user setelah registrasi
-    Auth::login($user);
-    
-
-    // Redirect ke halaman home setelah berhasil registrasi dan login
-    return redirect()->route('home');
+    return view('register'); // Pastikan view 'register' ada di resources/views/register.blade.php
 }
 
+
+    // Proses registrasi
+    public function register(Request $request)
+    {
+        try {
+            // Validasi input
+            $validated = $request->validate([
+                'name' => 'required|max:255',
+                'email' => 'required|email|unique:users,email', // Email harus unik
+                'password' => 'required|min:6|confirmed', // Password dan konfirmasinya harus cocok
+            ]);
+    
+            // Membuat user baru setelah validasi sukses
+            $user = new User();
+            $user->name = $validated['name'];
+            $user->email = $validated['email'];
+            $user->password = Hash::make($validated['password']); // Enkripsi password
+            $user->role = 'user';
+            $user->save();
+    
+            // Login user setelah registrasi
+            Auth::login($user);
+    
+            // Kirim respons JSON untuk AJAX
+            return response()->json([
+                'message' => 'Registrasi berhasil.',
+            ], 200);
+    
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+    
 
     // Logout
     public function logout()
